@@ -9,7 +9,7 @@ jobs:
     env:
       MAVEN_OPTS: -Xmx2g
       CONTAINER_REPO: ghcr.io/buskerudbyen/snow-plow-service
-      CONTAINER_REGISTRY_USER: ${{ github.actor }}
+      CONTAINER_REGISTRY_USER: buskerudbyen
       CONTAINER_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v3.1.0

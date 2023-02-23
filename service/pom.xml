@@ -160,7 +160,7 @@
                 <version>3.3.1</version>
                 <configuration>
                     <to>
-                        <image>${env.CONTAINER_REGISTRY_USER}</image>
+                        <image>ghcr.io/buskerudbyen/snow-plowing-service:latest</image>
                         <auth>
                             <username>${env.CONTAINER_REGISTRY_USER}</username>
                             <password>${env.CONTAINER_REGISTRY_PASSWORD}</password>
