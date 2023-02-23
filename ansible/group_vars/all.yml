@@ -13,12 +13,12 @@ users:
 
 server_name: "cycling-norway"
 
-snow_plow_service_image: "ghcr.io/buskerudbyen/digitransit-ui:v3-2023-02-20t13.00.44-4c4209a"
+snow_plow_service_image: "ghcr.io/buskerudbyen/snow-plow-service:latest"
 
 # Podman
 podman_prune_max_age: 72h
 podman_prune_users:
-      - snow-plowing-service
+      - snow-plow-service
 
 # ssh hardening
 network_ipv6_enable: true

@@ -1,9 +1,0 @@
----
-- name: Copy send-to-matrix script
-  template:
-    src: "{{ item }}"
-    dest: /usr/local/bin
-    mode: 711
-  with_items:
-    - send-to-matrix
-    - systemd-failure-notification

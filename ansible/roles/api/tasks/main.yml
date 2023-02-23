@@ -1,7 +1,7 @@
 ---
 - name: Create user otp
   user:
-    name: otp
+    name: snow-plowing-service
     state: present
     createhome: yes
     shell: /bin/bash
@@ -11,16 +11,7 @@
     src: systemd/{{ item }}
     dest: /etc/systemd/system/
   with_items:
-    - otp.service
-    - otp-restart.service
-    - otp-restart.timer
-  register: otp
-
-- name: Install systemd files for geocoder
-  ansible.builtin.template: src=systemd/{{ item }} dest=/etc/systemd/system/
-  with_items:
-    - geocoder.service
-  notify: Restart geocoder
+    - snow-plowing.service
 
 - name: Start services and timers
   systemd:
@@ -29,9 +20,7 @@
     enabled: yes
     daemon_reload: yes
   with_items:
-    - otp-restart.timer
-    - otp.service
-    - geocoder.service
+    - snow-plowing.service
 
 - name: Caddyfile
   ansible.builtin.template:
@@ -41,24 +30,3 @@
     group: caddy
     mode: 0660
   notify: Restart caddy
-
-- name: Add A record
-  community.dns.hetzner_dns_record:
-    state: present
-    zone: leonard.io
-    record: "{{inventory_hostname}}.okc.leonard.io"
-    type: A
-    ttl: 7200
-    value: '{{ ansible_facts["default_ipv4"]["address"]}}'
-    hetzner_token: "{{ hetzner_dns_token }}"
-
-
-- name: Add AAAA record
-  community.dns.hetzner_dns_record:
-    state: present
-    zone: leonard.io
-    record: "{{inventory_hostname}}.okc.leonard.io"
-    type: AAAA
-    ttl: 7200
-    value: '{{ ansible_facts["default_ipv6"]["address"]}}'
-    hetzner_token: "{{ hetzner_dns_token }}"
