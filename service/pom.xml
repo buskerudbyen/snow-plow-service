@@ -18,7 +18,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <dropwizard.version>2.1.4</dropwizard.version>
         <jts.version>1.18.1</jts.version>
-        <mainClass>snowplowservice.SnowPlowService</mainClass>
+        <mainClass>snowplowservice.SnowPlowServiceApplication</mainClass>
     </properties>
 
     <dependencyManagement>
