@@ -1,0 +1,13 @@
+---
+- name: Apply cycling-norway stack
+  hosts: all
+  # use this user if you don't have an account yet
+  user: root
+  become: yes
+  roles:
+    - role: devsec.hardening.ssh_hardening
+    - role: leonardehrenfried.baseline.base
+    - role: leonardehrenfried.baseline.journald
+    - base
+    - api
+

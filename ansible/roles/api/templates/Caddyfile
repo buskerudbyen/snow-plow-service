@@ -1,0 +1,6 @@
+:80 {
+  reverse_proxy /* localhost:{{ snow_plowing_service_port }}
+  reverse_proxy /geocoder/* localhost:{{ geocoder_port }} {
+    header_down Access-Control-Allow-Origin *
+  }
+}
