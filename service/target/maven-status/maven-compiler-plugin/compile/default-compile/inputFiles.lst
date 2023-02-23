@@ -1,0 +1,8 @@
+/home/becky/github/data-processor/service/src/main/java/snowplowservice/resources/SnowPlowResource.java
+/home/becky/github/data-processor/service/src/main/java/snowplowservice/SnowPlowServiceConfiguration.java
+/home/becky/github/data-processor/service/src/main/java/snowplowservice/api/RawGeometry.java
+/home/becky/github/data-processor/service/src/main/java/snowplowservice/SnowPlowServiceApplication.java
+/home/becky/github/data-processor/service/src/main/java/snowplowservice/api/ProcessedData.java
+/home/becky/github/data-processor/service/src/main/java/snowplowservice/api/RawData.java
+/home/becky/github/data-processor/service/src/main/java/snowplowservice/api/RawFeature.java
+/home/becky/github/data-processor/service/src/main/java/snowplowservice/api/ProcessedFeature.java
