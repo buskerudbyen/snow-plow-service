@@ -1,7 +1,7 @@
 ---
 - name: Create user otp
   user:
-    name: snow-plowing-service
+    name: snow-plow-service
     state: present
     createhome: yes
     shell: /bin/bash
@@ -11,7 +11,7 @@
     src: systemd/{{ item }}
     dest: /etc/systemd/system/
   with_items:
-    - snow-plowing.service
+    - snow-plow.service
 
 - name: Start services and timers
   systemd:
@@ -20,7 +20,7 @@
     enabled: yes
     daemon_reload: yes
   with_items:
-    - snow-plowing.service
+    - snow-plow.service
 
 - name: Caddyfile
   ansible.builtin.template:
