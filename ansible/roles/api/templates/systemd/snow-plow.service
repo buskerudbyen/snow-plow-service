@@ -1,0 +1,30 @@
+[Unit]
+Description=Run OTP
+
+# Restart once within 20 minutes so that an intermittent network failures are gracefully handled
+StartLimitIntervalSec=1200
+StartLimitBurst=5
+
+[Service]
+User=snow-plow-service
+ExecStartPre=-podman stop --ignore %n
+ExecStartPre=-podman rm %n
+
+#ExecStartPre=-send-to-matrix "🔁 Starting OTP on {{ server_name }}"
+ExecStartPre=-podman pull {{ snow_plow_service_image }}
+
+ExecStart=podman run \
+    --name %n \
+    --rm -p {{ snow_plow_service_port }}:8080 \
+    -e JAVA_OPTS="-Xmx4G" \
+    -e DATA_URL=https://static.public-test.appliedautonomy.no/company/6361454693318656/trails/mobile-trails-20230213-20230215.json \
+    {{ snow_plow_service_image }} server
+
+ExecStop=podman stop --ignore %n
+ExecStop=-podman rm %n
+
+
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
