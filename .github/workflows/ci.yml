@@ -23,8 +23,10 @@ jobs:
 
       - name: Test
         run: mvn --batch-mode test
+        working-directory: service
 
       - name: Build container image with Jib, push to Dockerhub
         run: |
           image_date=`date +%Y-%m-%dT%H-%M`
           mvn --batch-mode compile com.google.cloud.tools:jib-maven-plugin:build -Djib.to.tags=latest,$image_date
+        working-directory: service
