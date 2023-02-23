@@ -1,8 +1,0 @@
-snowplowservice/SnowPlowServiceApplication.class
-snowplowservice/api/ProcessedFeature.class
-snowplowservice/SnowPlowServiceConfiguration.class
-snowplowservice/api/RawFeature.class
-snowplowservice/resources/SnowPlowResource.class
-snowplowservice/api/RawGeometry.class
-snowplowservice/api/ProcessedData.class
-snowplowservice/api/RawData.class
