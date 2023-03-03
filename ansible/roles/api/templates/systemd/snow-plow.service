@@ -17,7 +17,7 @@ ExecStart=podman run \
     --name %n \
     --rm -p {{ snow_plow_service_port }}:8080 \
     -e JAVA_OPTS="-Xmx4G" \
-    -e DATA_URL=https://static.public-test.appliedautonomy.no/company/6361454693318656/trails/mobile-trails-20230213-20230215.json \
+    -e DATA_URL=https://static.public-test.appliedautonomy.no/company/5308356361191424/trails/mobile-trails-20230223-20230225.json \
     {{ snow_plow_service_image }} server
 
 ExecStop=podman stop --ignore %n
