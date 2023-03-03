@@ -2,10 +2,14 @@ package snowplowservice.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import snowplowservice.api.*;
 import org.json.simple.JSONObject;
 import org.locationtech.jts.geom.*;
 
+import javax.annotation.Nonnull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -14,6 +18,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static org.locationtech.jts.geom.Geometry.TYPENAME_LINESTRING;
 
@@ -44,13 +50,36 @@ public class SnowPlowResource {
     };
     private final Polygon konnerudgataArea;
 
+    private final LoadingCache<String, String> cache;
+
     public SnowPlowResource() {
         this.konnerudgataArea = new GeometryFactory().createPolygon(konnerrudgataAreaCoords);
+        this.cache = CacheBuilder.newBuilder()
+                .refreshAfterWrite(9, TimeUnit.MINUTES)
+                .expireAfterWrite(10, TimeUnit.MINUTES)
+                .build(new CacheLoader<String, String>() {
+                            @Override
+                            public String load(final @Nonnull String s) {
+                                if ("konnerudgata".equals(s)) {
+                                    return loadData();
+                                }
+                                return null;
+                            }
+                        }
+                      );
     }
 
     @GET
     @Timed
     public String getSnowPlowData() {
+        try {
+            return cache.get("konnerudgata");
+        } catch (ExecutionException e) {
+            return "ERROR";
+        }
+    }
+
+    private String loadData() {
         RawData rawData;
         try {
             rawData = getRawData();
