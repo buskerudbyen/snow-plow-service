@@ -1,31 +1,45 @@
 package snowplowservice.resources;
 
+import static org.locationtech.jts.geom.Geometry.TYPENAME_LINESTRING;
+
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import snowplowservice.api.*;
-import org.json.simple.JSONObject;
-import org.locationtech.jts.geom.*;
-
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
-import static org.locationtech.jts.geom.Geometry.TYPENAME_LINESTRING;
+import org.json.simple.JSONObject;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.CoordinateList;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.Polygon;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import snowplowservice.api.ProcessedData;
+import snowplowservice.api.ProcessedFeature;
+import snowplowservice.api.RawData;
+import snowplowservice.api.RawFeature;
 
 @Path("/snow-plow-konnerudgata")
 @Produces(MediaType.APPLICATION_JSON)
 public class SnowPlowResource {
+
+    Logger LOG = LoggerFactory.getLogger(SnowPlowResource.class);
 
     private static final Coordinate[] konnerrudgataAreaCoords = {
             new Coordinate(10.200291233574774,59.73962175701382),
@@ -96,7 +110,7 @@ public class SnowPlowResource {
             String url = System.getenv("DATA_URL");
             return new URL(url);
         } catch (MalformedURLException e) {
-            System.err.println("Error creating the URL.");
+            LOG.error("Error creating the URL.");
             throw e;
         }
     }
@@ -106,7 +120,7 @@ public class SnowPlowResource {
         try {
             return mapper.readValue(constructUrl(), RawData.class);
         } catch (IOException e) {
-            System.err.println("Error getting the data from the URL.");
+            LOG.error("Error getting the data from the URL.");
             throw e;
         }
     }
