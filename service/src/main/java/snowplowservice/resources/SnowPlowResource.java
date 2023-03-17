@@ -26,7 +26,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import org.json.simple.JSONObject;
 import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.CoordinateList;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Polygon;
@@ -37,7 +36,6 @@ import org.wololo.geojson.GeoJSONFactory;
 import org.wololo.jts2geojson.GeoJSONReader;
 import snowplowservice.api.ProcessedData;
 import snowplowservice.api.ProcessedFeature;
-import snowplowservice.api.RawFeature;
 
 @Path("/snow-plow-konnerudgata")
 @Produces(MediaType.APPLICATION_JSON)
@@ -180,7 +178,8 @@ public class SnowPlowResource {
 
         LinkedHashMap<String, Object> geometry = new LinkedHashMap<>();
         geometry.put("type", "LineString");
-        geometry.put("coordinates", Arrays.asList(processedFeature.getGeometry().getCoordinates()).stream().map(SnowPlowResource::toList).toList());
+        geometry.put("coordinates", Arrays.stream(processedFeature.getGeometry().getCoordinates())
+                .map(SnowPlowResource::toList).toList());
         feature.put("geometry", geometry);
 
         Map<String, Object> properties = new HashMap<>();
@@ -191,6 +190,6 @@ public class SnowPlowResource {
     }
 
     private static List<Number> toList(Coordinate coordinate) {
-        return List.of(coordinate.y, coordinate.x);
+        return List.of(coordinate.x, coordinate.y);
     }
 }
