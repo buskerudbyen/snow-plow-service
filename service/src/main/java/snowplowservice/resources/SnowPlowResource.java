@@ -1,16 +1,18 @@
 package snowplowservice.resources;
 
-import static org.locationtech.jts.geom.Geometry.TYPENAME_LINESTRING;
-
 import com.codahale.metrics.annotation.Timed;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,9 +32,11 @@ import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Polygon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wololo.geojson.FeatureCollection;
+import org.wololo.geojson.GeoJSONFactory;
+import org.wololo.jts2geojson.GeoJSONReader;
 import snowplowservice.api.ProcessedData;
 import snowplowservice.api.ProcessedFeature;
-import snowplowservice.api.RawData;
 import snowplowservice.api.RawFeature;
 
 @Path("/snow-plow-konnerudgata")
@@ -94,13 +98,13 @@ public class SnowPlowResource {
     }
 
     private String loadData() {
-        RawData rawData;
+        List<LineString> lineStrings;
         try {
-            rawData = getRawData();
+            lineStrings = getLineStrings();
         } catch (IOException e) {
             return "ERROR";
         }
-        ProcessedData processedData = filterData(rawData);
+        ProcessedData processedData = filterData(lineStrings);
 
         return writeGeojson(processedData);
     }
@@ -115,30 +119,40 @@ public class SnowPlowResource {
         }
     }
 
-    private RawData getRawData() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
+    private List<LineString> getLineStrings() throws IOException {
         try {
-            return mapper.readValue(constructUrl(), RawData.class);
-        } catch (IOException e) {
+
+            var req = HttpRequest.newBuilder(constructUrl().toURI()).build();
+            var response = HttpClient.newHttpClient().send(req, BodyHandlers.ofString());
+            var geojson = GeoJSONFactory.create(response.body());
+
+            if(geojson instanceof FeatureCollection fc) {
+                return Arrays.stream(fc.getFeatures()).map(f -> {
+                   GeoJSONReader reader = new GeoJSONReader();
+                   var g = reader.read(f.getGeometry());
+                   g.setUserData(f.getProperties());
+                   return g;
+                }).filter(LineString.class::isInstance).map(LineString.class::cast).toList();
+            }
+            else {
+                return List.of();
+            }
+
+
+        } catch (IOException | URISyntaxException | InterruptedException e) {
             LOG.error("Error getting the data from the URL.", e);
-            throw e;
+            throw new RuntimeException(e);
         }
     }
 
-    private ProcessedData filterData(RawData rawData) {
+    private ProcessedData filterData(List<LineString> lineStrings) {
         ProcessedData processedData = new ProcessedData();
 
-        for (RawFeature feature : rawData.getFeatures()) {
-            if (TYPENAME_LINESTRING.equals(feature.getGeometry().getType())) {
-                LineString line = new GeometryFactory().createLineString(getCoordArray(feature));
+        for (LineString lineString : lineStrings) {
                 // Keep lines that are in the Konnerrudgata area.
-                if (konnerudgataArea.contains(line)) {
-                    // We won't need the LineString object anymore, the geometry stays the same,
-                    // but the 4. "coordinate" is invalid.
-                    feature.getGeometry().getCoordinates().forEach(coords -> coords.remove(3));
-                    processedData.addFeature(new ProcessedFeature(feature));
+                if (konnerudgataArea.contains(lineString)) {
+                    processedData.addFeature(new ProcessedFeature(lineString));
                 }
-            }
         }
 
         return processedData;
