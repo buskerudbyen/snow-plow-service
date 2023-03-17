@@ -134,8 +134,7 @@ public class SnowPlowResource {
         CoordinateList coords = new CoordinateList();
 
         for (List<Object> coordinate : feature.getGeometry().getCoordinates()) {
-            Coordinate coord = new Coordinate((double) coordinate.get(0), (double) coordinate.get(1),
-                                              (double) (int) coordinate.get(2));
+            Coordinate coord = new Coordinate((double) coordinate.get(0), (double) coordinate.get(1));
             coords.add(coord);
         }
 
