@@ -202,6 +202,6 @@ public class SnowPlowResource {
     }
 
     private static List<Number> toList(Coordinate coordinate) {
-        return List.of(coordinate.x, coordinate.y);
+        return List.of(coordinate.y, coordinate.x);
     }
 }
