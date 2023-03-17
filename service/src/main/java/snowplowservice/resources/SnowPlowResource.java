@@ -190,7 +190,7 @@ public class SnowPlowResource {
         feature.put("type", "Feature");
 
         LinkedHashMap<String, Object> geometry = new LinkedHashMap<>();
-        geometry.put("type", processedFeature.getGeometry().getType());
+        geometry.put("type", "LineString");
         geometry.put("coordinates", processedFeature.getGeometry().getCoordinates());
         feature.put("geometry", geometry);
 
