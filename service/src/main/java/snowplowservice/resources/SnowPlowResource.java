@@ -110,7 +110,7 @@ public class SnowPlowResource {
             String url = System.getenv("DATA_URL");
             return new URL(url);
         } catch (MalformedURLException e) {
-            LOG.error("Error creating the URL.");
+            LOG.error("Error creating the URL.", e);
             throw e;
         }
     }
@@ -120,7 +120,7 @@ public class SnowPlowResource {
         try {
             return mapper.readValue(constructUrl(), RawData.class);
         } catch (IOException e) {
-            LOG.error("Error getting the data from the URL.");
+            LOG.error("Error getting the data from the URL.", e);
             throw e;
         }
     }
