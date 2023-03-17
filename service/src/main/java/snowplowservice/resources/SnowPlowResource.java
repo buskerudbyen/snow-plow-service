@@ -191,7 +191,7 @@ public class SnowPlowResource {
 
         LinkedHashMap<String, Object> geometry = new LinkedHashMap<>();
         geometry.put("type", "LineString");
-        geometry.put("coordinates", Arrays.asList(processedFeature.getGeometry().getCoordinates()));
+        geometry.put("coordinates", Arrays.asList(processedFeature.getGeometry().getCoordinates()).stream().map(SnowPlowResource::toList).toList());
         feature.put("geometry", geometry);
 
         Map<String, Object> properties = new HashMap<>();
@@ -199,5 +199,9 @@ public class SnowPlowResource {
         feature.put("properties", properties);
 
         return feature;
+    }
+
+    private static List<Number> toList(Coordinate coordinate) {
+        return List.of(coordinate.x, coordinate.y);
     }
 }
