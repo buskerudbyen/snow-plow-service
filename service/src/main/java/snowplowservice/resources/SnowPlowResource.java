@@ -158,17 +158,6 @@ public class SnowPlowResource {
         return processedData;
     }
 
-    private Coordinate[] getCoordArray(RawFeature feature) {
-        CoordinateList coords = new CoordinateList();
-
-        for (List<Object> coordinate : feature.getGeometry().getCoordinates()) {
-            Coordinate coord = new Coordinate((double) coordinate.get(0), (double) coordinate.get(1));
-            coords.add(coord);
-        }
-
-        return coords.toCoordinateArray();
-    }
-
     private String writeGeojson(ProcessedData data) {
         List<Map<String, Object>> featureList = new ArrayList<>();
         for (ProcessedFeature feature : data.getFeatures()) {
