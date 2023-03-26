@@ -1,22 +1,25 @@
 package snowplowservice.resources;
 
+import ch.qos.logback.core.util.FileUtil;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
@@ -24,6 +27,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import io.dropwizard.util.Resources;
 import org.json.simple.JSONObject;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -96,15 +101,30 @@ public class SnowPlowResource {
     }
 
     private String loadData() {
-        List<LineString> lineStrings;
-        try {
-            lineStrings = getLineStrings();
-        } catch (IOException e) {
-            return "ERROR";
-        }
-        ProcessedData processedData = filterData(lineStrings);
+        List<LineString> lineStrings = getLineStrings();
 
+        if (lineStrings.size() == 0) {
+            return getStaticData();
+        }
+
+        ProcessedData processedData = filterData(lineStrings);
         return writeGeojson(processedData);
+    }
+
+    private String getStaticData() {
+        String fileName = "/assets/konnerudgata-linestring.geojson";
+        InputStream resource = SnowPlowResource.class.getResourceAsStream(fileName);
+
+        try {
+            if (resource == null) {
+                throw new IllegalArgumentException(fileName);
+            } else {
+                return new String(resource.readAllBytes(), StandardCharsets.UTF_8);
+            }
+        } catch (IllegalArgumentException | IOException e) {
+            LOG.error("Error getting the data from the static file.", e);
+            throw new RuntimeException(e);
+        }
     }
 
     private URL constructUrl() throws MalformedURLException {
@@ -117,9 +137,8 @@ public class SnowPlowResource {
         }
     }
 
-    private List<LineString> getLineStrings() throws IOException {
+    private List<LineString> getLineStrings() {
         try {
-
             var req = HttpRequest.newBuilder(constructUrl().toURI()).build();
             var response = HttpClient.newHttpClient().send(req, BodyHandlers.ofString());
             var geojson = GeoJSONFactory.create(response.body());
@@ -135,7 +154,6 @@ public class SnowPlowResource {
             else {
                 return List.of();
             }
-
 
         } catch (IOException | URISyntaxException | InterruptedException e) {
             LOG.error("Error getting the data from the URL.", e);
