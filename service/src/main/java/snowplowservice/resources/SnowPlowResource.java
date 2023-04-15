@@ -5,10 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import org.json.simple.JSONObject;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.LineString;
-import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wololo.geojson.FeatureCollection;
@@ -34,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Path("/snow-plow-konnerudgata")
 @Produces(MediaType.APPLICATION_JSON)
@@ -94,13 +92,21 @@ public class SnowPlowResource {
     }
 
     private String loadData() {
-        List<LineString> lineStrings = getLineStrings();
+        List<Geometry> geometries = getGeometries();
+        List<LineString> lineStrings =
+                geometries.stream().filter(LineString.class::isInstance).map(LineString.class::cast).toList();
+        List<Point> points =
+                geometries.stream().filter(Point.class::isInstance).map(Point.class::cast).toList();
 
         if (lineStrings.size() == 0) {
             return getStaticData();
         }
 
         ProcessedData processedData = filterData(lineStrings);
+        if (points != null && points.size() > 0) {
+            processedData.setSnowing(getSnowInfo(points));
+        }
+
         return writeGeojson(processedData);
     }
 
@@ -130,7 +136,7 @@ public class SnowPlowResource {
         }
     }
 
-    private List<LineString> getLineStrings() {
+    private List<Geometry> getGeometries() {
         try {
             var req = HttpRequest.newBuilder(constructUrl().toURI()).build();
             var response = HttpClient.newHttpClient().send(req, BodyHandlers.ofString());
@@ -142,7 +148,7 @@ public class SnowPlowResource {
                    var g = reader.read(f.getGeometry());
                    g.setUserData(f.getProperties());
                    return g;
-                }).filter(LineString.class::isInstance).map(LineString.class::cast).toList();
+                }).collect(Collectors.toList());
             }
             else {
                 return List.of();
@@ -167,10 +173,31 @@ public class SnowPlowResource {
         return processedData;
     }
 
+    private boolean getSnowInfo(List<Point> points) {
+        boolean currentlySnowing = false;
+
+        // should be 1 Point with weather details
+        Point weatherInfo = points.get(0);
+        if (weatherInfo != null && weatherInfo.getUserData() != null) {
+            currentlySnowing = ((LinkedHashMap<String, Object>) weatherInfo.getUserData())
+                    .get("weather_status").toString().contains("snow");
+        }
+
+        return currentlySnowing;
+    }
+
     private String writeGeojson(ProcessedData data) {
+        boolean allOld = true;
         List<Map<String, Object>> featureList = new ArrayList<>();
         for (ProcessedFeature feature : data.getFeatures()) {
+            allOld &= feature.isOld();
             featureList.add(createGeoJsonFeature(feature));
+        }
+
+        if (allOld && data.isSnowing()) {
+            // return the static geojson with snowing info
+            String roadData = getStaticData();
+            return roadData.replace("]\n}", "], \"isSnowing\":true}");
         }
 
         return createGeoJsonCollection(featureList);
