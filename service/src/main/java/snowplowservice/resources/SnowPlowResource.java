@@ -98,20 +98,19 @@ public class SnowPlowResource {
         List<Point> points =
                 geometries.stream().filter(Point.class::isInstance).map(Point.class::cast).toList();
 
-        if (lineStrings.size() == 0) {
-            return getStaticData();
+        ProcessedData processedData = new ProcessedData();
+        if (!points.isEmpty()) {
+            processedData.setSnowing(getSnowInfo(points));
         }
 
-        ProcessedData processedData = filterData(lineStrings);
-        if (points != null && points.size() > 0) {
-            processedData.setSnowing(getSnowInfo(points));
+        if (!lineStrings.isEmpty()) {
+            processedData.addFeatures(filterData(lineStrings));
         }
 
         return writeGeojson(processedData);
     }
 
-    private String getStaticData() {
-        String fileName = "/assets/konnerudgata-linestring.geojson";
+    private String getStaticData(String fileName) {
         InputStream resource = SnowPlowResource.class.getResourceAsStream(fileName);
 
         try {
@@ -160,17 +159,17 @@ public class SnowPlowResource {
         }
     }
 
-    private ProcessedData filterData(List<LineString> lineStrings) {
-        ProcessedData processedData = new ProcessedData();
+    private List<ProcessedFeature> filterData(List<LineString> lineStrings) {
+        List<ProcessedFeature> features = new ArrayList<>();
 
         for (LineString lineString : lineStrings) {
-                // Keep lines that are in the Konnerrudgata area.
-                if (konnerudgataArea.contains(lineString)) {
-                    processedData.addFeature(new ProcessedFeature(lineString));
-                }
+            // Keep lines that are in the Konnerrudgata area.
+            if (konnerudgataArea.contains(lineString)) {
+                features.add(new ProcessedFeature(lineString));
+            }
         }
 
-        return processedData;
+        return features;
     }
 
     private boolean getSnowInfo(List<Point> points) {
@@ -195,9 +194,11 @@ public class SnowPlowResource {
         }
 
         if (allOld && data.isSnowing()) {
-            // return the static geojson with snowing info
-            String roadData = getStaticData();
-            return roadData.replace("]\n}", "], \"isSnowing\":true}");
+            return getStaticData("/assets/konnerudgata-snowing.geojson");
+        }
+
+        if (data.getFeatures().isEmpty()) {
+            return getStaticData("/assets/konnerudgata-linestring.geojson");
         }
 
         return createGeoJsonCollection(featureList);
