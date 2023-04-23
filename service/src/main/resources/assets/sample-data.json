@@ -3756,7 +3756,7 @@
         "toggle_state_list": [
           "DEFAULT"
         ],
-        "start": "2023-02-13 09:47:39+00:00",
+        "start": "2023-04-15 15:47:39+00:00",
         "age": 2
       }
     },
@@ -3881,6 +3881,22 @@
         ],
         "start": "2023-02-13 10:08:19+00:00",
         "age": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.145973,
+          59.718913
+        ]
+      },
+      "properties": {
+        "from_rsu": 6450416887791616,
+        "weather_status": "snow",
+        "precipitation_mmh": "0.0",
+        "air_temperature": "-4.4"
       }
     }
   ]
