@@ -4,13 +4,14 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import org.json.simple.JSONObject;
 import org.locationtech.jts.geom.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wololo.geojson.Feature;
 import org.wololo.geojson.FeatureCollection;
 import org.wololo.geojson.GeoJSONFactory;
 import org.wololo.jts2geojson.GeoJSONReader;
+import org.wololo.jts2geojson.GeoJSONWriter;
 import snowplowservice.api.ProcessedData;
 import snowplowservice.api.ProcessedFeature;
 
@@ -186,11 +187,13 @@ public class SnowPlowResource {
     }
 
     private String writeGeojson(ProcessedData data) {
+        GeoJSONWriter writer = new GeoJSONWriter();
         boolean allOld = true;
-        List<Map<String, Object>> featureList = new ArrayList<>();
+        List<Feature> featureList = new ArrayList<>();
+
         for (ProcessedFeature feature : data.getFeatures()) {
             allOld &= feature.isOld();
-            featureList.add(createGeoJsonFeature(feature));
+            featureList.add(createGeoJsonFeature(writer, feature));
         }
 
         if (allOld && data.isSnowing()) {
@@ -201,34 +204,16 @@ public class SnowPlowResource {
             return getStaticData("/assets/konnerudgata-linestring.geojson");
         }
 
-        return createGeoJsonCollection(featureList);
+        FeatureCollection collection = writer.write(featureList);
+        return collection.toString();
     }
 
-    private String createGeoJsonCollection(List<Map<String, Object>> featureList) {
-        Map<String, Object> collection = new LinkedHashMap<>();
-        collection.put("type", "FeatureCollection");
-        collection.put("features", featureList);
-        return JSONObject.toJSONString(collection);
-    }
-
-    private Map<String, Object> createGeoJsonFeature(ProcessedFeature processedFeature) {
-        Map<String, Object> feature = new LinkedHashMap<>();
-        feature.put("type", "Feature");
-
-        LinkedHashMap<String, Object> geometry = new LinkedHashMap<>();
-        geometry.put("type", "LineString");
-        geometry.put("coordinates", Arrays.stream(processedFeature.getGeometry().getCoordinates())
-                .map(SnowPlowResource::toList).toList());
-        feature.put("geometry", geometry);
+    private Feature createGeoJsonFeature(GeoJSONWriter writer, ProcessedFeature processedFeature) {
+        org.wololo.geojson.Geometry geometry = writer.write(processedFeature.getGeometry());
 
         Map<String, Object> properties = new HashMap<>();
         properties.put("isOld", processedFeature.isOld());
-        feature.put("properties", properties);
 
-        return feature;
-    }
-
-    private static List<Number> toList(Coordinate coordinate) {
-        return List.of(coordinate.x, coordinate.y);
+        return new Feature(geometry, properties);
     }
 }
