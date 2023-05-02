@@ -200,6 +200,8 @@ public class SnowPlowResource {
             return getStaticData("/assets/konnerudgata-snowing.geojson");
         }
 
+        // no snow-plowing data available, so we assume that it has been more than 3 hours since
+        // the last plow and we want to show an all orange line
         if (data.getFeatures().isEmpty()) {
             return getStaticData("/assets/konnerudgata-linestring.geojson");
         }
