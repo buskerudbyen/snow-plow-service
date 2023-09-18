@@ -1,6 +1,0 @@
----
-
-- name: Restart geocoder
-  systemd:
-    state: restarted
-    name: geocoder

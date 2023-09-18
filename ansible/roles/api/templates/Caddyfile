@@ -1,5 +1,0 @@
-cycling-norway.leonard.io {
-  reverse_proxy /* localhost:{{ snow_plow_service_port }} {
-    header_down Access-Control-Allow-Origin *
-  }
-}

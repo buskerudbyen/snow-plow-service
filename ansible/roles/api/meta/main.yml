@@ -1,6 +1,0 @@
----
-collections:
-
-dependencies:
-  - role: leonardehrenfried.baseline.podman
-  - role: leonardehrenfried.baseline.caddy
